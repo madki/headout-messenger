@@ -12,6 +12,6 @@ import retrofit2.http.Query;
  */
 public interface MessengerApi {
 
-    @POST("message")
+    @POST("messages")
     Call<JsonElement> sendMessage(@Query("access_token") String pageToken, @Body MessageData messageData);
 }

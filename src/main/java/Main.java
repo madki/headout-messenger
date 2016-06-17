@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import models.*;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ratpack.handling.Chain;
@@ -32,7 +33,19 @@ public class Main {
 
     private static final Gson gson = new GsonBuilder().create();
 
-    private static final OkHttpClient messengerClient = new OkHttpClient.Builder().build();
+    private static final HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+
+    private static final OkHttpClient messengerClient;
+    private static final OkHttpClient headoutClient;
+
+
+    static {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+        builder.networkInterceptors().add(interceptor);
+
+        messengerClient = builder.build();
+        headoutClient = builder.build();
+    }
 
     private static final Retrofit messengerRetrofit = new Retrofit.Builder()
             .client(messengerClient)
@@ -42,7 +55,6 @@ public class Main {
 
     private static final MessengerApi messengerApi = messengerRetrofit.create(MessengerApi.class);
     
-    private static final OkHttpClient headoutClient = new OkHttpClient.Builder().build();
 
     private static final Retrofit headoutRetrofit = new Retrofit.Builder()
             .client(headoutClient)
@@ -53,6 +65,8 @@ public class Main {
     private static final HeadoutApi headoutApi = headoutRetrofit.create(HeadoutApi.class);
 
     public static void main(String... args) throws Exception {
+        interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
         RatpackServer.start(s -> s
                 .serverConfig(c -> c
                         .baseDir(BaseDir.find())
