@@ -2,6 +2,7 @@ import apis.HeadoutApi;
 import apis.MessengerApi;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
 import models.*;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
@@ -13,8 +14,10 @@ import ratpack.server.BaseDir;
 import ratpack.server.RatpackServer;
 import ratpack.groovy.template.TextTemplateModule;
 import ratpack.guice.Guice;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import utils.Strings;
 
 import static ratpack.groovy.Groovy.groovyTemplate;
 
@@ -28,6 +31,7 @@ public class Main {
     private static final String MESSAGE_URL = "https://graph.facebook.com/v2.6/me/";
 
     private static final Gson gson = new GsonBuilder().create();
+
     private static final OkHttpClient messengerClient = new OkHttpClient.Builder().build();
 
     private static final Retrofit messengerRetrofit = new Retrofit.Builder()
@@ -72,7 +76,7 @@ public class Main {
                                 })
                                 .post(() -> {
                                     ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(wr -> {
-                                        LOGGER.info("request : " + Jackson.json(wr));
+                                        LOGGER.info("request : " + Strings.toString(wr));
                                         processRequest(wr);
                                     });
                                     ctx.getResponse().status(200).send();
@@ -113,7 +117,12 @@ public class Main {
             MessageData messageData = new MessageData();
             messageData.setSender(sender);
             messageData.setMessage(message);
-            messengerApi.sendMessage(PAGE_ACCESS_TOKEN, messageData).execute();
+            Response<JsonElement> result = messengerApi.sendMessage(PAGE_ACCESS_TOKEN, messageData).execute();
+            if (result.isSuccessful()) {
+                LOGGER.info("Success: " + result.body().toString());
+            } else {
+                LOGGER.error("Error: " + result.errorBody().string());
+            }
         } else {
             LOGGER.info("Not a message with text " + message);
         }
