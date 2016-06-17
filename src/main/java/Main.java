@@ -6,6 +6,7 @@ import models.*;
 import okhttp3.OkHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ratpack.handling.Chain;
 import ratpack.http.Request;
 import ratpack.jackson.Jackson;
 import ratpack.server.BaseDir;
@@ -59,22 +60,24 @@ public class Main {
                 .handlers(chain -> chain
                         .get(ctx -> ctx.render(groovyTemplate("index.html")))
 
-                        .get("webhook", ctx -> {
-                            Request request = ctx.getRequest();
-                            Map<String, String> queryParams = request.getQueryParams();
-                            if ("subscribe".equals(queryParams.get("hub.mode")) && TOKEN.equals(queryParams.get("hub.verify_token"))) {
-                                ctx.render(queryParams.get("hub.challenge"));
-                            } else {
-                                ctx.render("Hello world!");
-                            }
-                        })
-
-                        .post("webhook", ctx -> {
-                            ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(wr -> {
-//                                processRequest(wr);
-                                ctx.render(wr);
-                            });
-                        })
+                        .path("webhook", ctx -> ctx.byMethod(m -> m
+                                .get(() -> {
+                                    Request request = ctx.getRequest();
+                                    Map<String, String> queryParams = request.getQueryParams();
+                                    if ("subscribe".equals(queryParams.get("hub.mode")) && TOKEN.equals(queryParams.get("hub.verify_token"))) {
+                                        ctx.render(queryParams.get("hub.challenge"));
+                                    } else {
+                                        ctx.render("Hello world!");
+                                    }
+                                })
+                                .post(() -> {
+                                    ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(wr -> {
+//                                        processRequest(wr);
+                                        LOGGER.info("request : " + Jackson.json(wr));
+                                    });
+                                    ctx.getResponse().status(200).send();
+                                })
+                        ))
 
                         .files(f -> f.dir("public"))
                 )
