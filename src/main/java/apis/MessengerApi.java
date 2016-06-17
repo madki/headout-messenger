@@ -1,6 +1,8 @@
 package apis;
 
+import com.google.gson.JsonElement;
 import models.MessageData;
+import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
@@ -11,5 +13,5 @@ import retrofit2.http.Query;
 public interface MessengerApi {
 
     @POST("message")
-    void sendMessage(@Query("access_token") String pageToken, @Body MessageData messageData);
+    Call<JsonElement> sendMessage(@Query("access_token") String pageToken, @Body MessageData messageData);
 }

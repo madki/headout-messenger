@@ -72,8 +72,8 @@ public class Main {
                                 })
                                 .post(() -> {
                                     ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(wr -> {
-//                                        processRequest(wr);
                                         LOGGER.info("request : " + Jackson.json(wr));
+                                        processRequest(wr);
                                     });
                                     ctx.getResponse().status(200).send();
                                 })
@@ -84,17 +84,21 @@ public class Main {
         );
     }
 
-    private static void processRequest(WebhookRequest webhookRequest) {
+    private static void processRequest(WebhookRequest webhookRequest) throws Exception {
         if ("page".equals(webhookRequest.getObject())) {
-            webhookRequest.getEntry().forEach(Main::processEntry);
+            for (Entry e: webhookRequest.getEntry()) {
+                processEntry(e);
+            }
         }
     }
 
-    private static void processEntry(Entry entry) {
-        entry.getMessaging().forEach(Main::processMessageData);
+    private static void processEntry(Entry entry) throws Exception {
+        for (MessageData md : entry.getMessaging()) {
+            processMessageData(md);
+        }
     }
 
-    private static void processMessageData(MessageData messageData) {
+    private static void processMessageData(MessageData messageData) throws Exception {
         if (messageData.getMessage() != null) {
             processMessage(messageData.getSender(), messageData.getMessage());
         } else if (messageData.getPostback() != null) {
@@ -104,12 +108,12 @@ public class Main {
         }
     }
 
-    private static void processMessage(User sender, Message message) {
+    private static void processMessage(User sender, Message message) throws Exception {
         if (message.getText() != null) {
             MessageData messageData = new MessageData();
             messageData.setSender(sender);
             messageData.setMessage(message);
-            messengerApi.sendMessage(PAGE_ACCESS_TOKEN, messageData);
+            messengerApi.sendMessage(PAGE_ACCESS_TOKEN, messageData).execute();
         } else {
             LOGGER.info("Not a message with text " + message);
         }
