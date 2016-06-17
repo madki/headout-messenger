@@ -1,5 +1,7 @@
 package models;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import utils.Strings;
 
 /**
@@ -7,13 +9,13 @@ import utils.Strings;
  */
 public class Attachment {
     private String type;
-    private Payload payload;
+    private JsonElement payload;
 
     public void setType(String type) {
         this.type = type;
     }
 
-    public void setPayload(Payload payload) {
+    public void setPayload(JsonElement payload) {
         this.payload = payload;
     }
 
@@ -21,24 +23,22 @@ public class Attachment {
         return type;
     }
 
-    public Payload getPayload() {
+    public JsonElement getPayload() {
         return payload;
     }
 
-    public static class Payload {
-        private String url;
+    public static Attachment withButtons(ButtonsPayload buttons, Gson gson) {
+        Attachment a = new Attachment();
+        a.setType("template");
+        a.setPayload(gson.toJsonTree(buttons));
+        return a;
+    }
 
-        Payload(String url) {
-            this.url = url;
-        }
-
-        public void setUrl(String url) {
-            this.url = url;
-        }
-
-        public String getUrl() {
-            return url;
-        }
+    public static Attachment withElements(GenericPayload payload, Gson gson) {
+        Attachment a = new Attachment();
+        a.setType("template");
+        a.setPayload(gson.toJsonTree(payload));
+        return a;
     }
 
     @Override

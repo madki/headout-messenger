@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import models.*;
+import models.headout.City;
+import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.slf4j.Logger;
@@ -20,9 +22,16 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import utils.Strings;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import static ratpack.groovy.Groovy.groovyTemplate;
 
+import java.security.cert.CertificateException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Main {
     private final static Logger LOGGER = LoggerFactory.getLogger(Main.class);
@@ -30,6 +39,8 @@ public class Main {
     private static final String TOKEN = "my_awesome_token";
     private static final String PAGE_ACCESS_TOKEN = "EAAQrIZCTlZAS0BABWW4XA5AzAq5fYVxHeZCSK6x0DPljhGoa0z1cZBCBQZAFxfpqISb6JiGbfuTfki5gpRIhHz6FxZB21yz5Uwrtyx566xUUfcHSovR0rygYYUCaa7wPnHW4aJ3CIY2lH8ZB07PrqnGfdJUlU2gP7aRpa5mgmctPQZDZD";
     private static final String MESSAGE_URL = "https://graph.facebook.com/v2.6/me/";
+
+    private static final String HEADOUT_URL = "https://www.test-headout.com/";
 
     private static final Gson gson = new GsonBuilder().create();
 
@@ -44,7 +55,48 @@ public class Main {
         builder.networkInterceptors().add(interceptor);
 
         messengerClient = builder.build();
+        prepareHeadoutClient(builder);
         headoutClient = builder.build();
+    }
+
+    private static void prepareHeadoutClient(OkHttpClient.Builder client) {
+        final TrustManager[] trustAllCerts = new TrustManager[]{
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                    }
+
+                    @Override
+                    public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                    }
+
+                    @Override
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                        return new java.security.cert.X509Certificate[]{};
+                    }
+                }
+        };
+
+        try {
+            // Install the all-trusting trust manager
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+            // Create an ssl socket factory with our all-trusting manager
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+            client.sslSocketFactory(sslSocketFactory);
+            client.hostnameVerifier((hostname, session) -> true);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        client.interceptors().add(chain -> {
+            okhttp3.Request request = chain.request()
+                    .newBuilder()
+                    .addHeader("Authorization", Credentials.basic("goku", "kakarot"))
+                    .build();
+            return chain.proceed(request);
+        });
     }
 
     private static final Retrofit messengerRetrofit = new Retrofit.Builder()
@@ -54,12 +106,12 @@ public class Main {
             .build();
 
     private static final MessengerApi messengerApi = messengerRetrofit.create(MessengerApi.class);
-    
+
 
     private static final Retrofit headoutRetrofit = new Retrofit.Builder()
             .client(headoutClient)
             .addConverterFactory(GsonConverterFactory.create(gson))
-            .baseUrl(MESSAGE_URL)
+            .baseUrl(HEADOUT_URL)
             .build();
 
     private static final HeadoutApi headoutApi = headoutRetrofit.create(HeadoutApi.class);
@@ -105,7 +157,7 @@ public class Main {
 
     private static void processRequest(WebhookRequest webhookRequest) throws Exception {
         if ("page".equals(webhookRequest.getObject())) {
-            for (Entry e: webhookRequest.getEntry()) {
+            for (Entry e : webhookRequest.getEntry()) {
                 processEntry(e);
             }
         }
@@ -123,32 +175,62 @@ public class Main {
         } else if (messageData.getPostback() != null) {
             processPostback(messageData.getSender(), messageData.getPostback());
         } else {
-            LOGGER.warn("Unknown messageData, neither message, nor postback");
             System.out.println("Unknown messageData, neither message, nor postback");
         }
     }
 
-    private static void processMessage(User sender, Message message) throws Exception {
+    private static void processMessage(User user, Message message) throws Exception {
         if (message.getText() != null) {
             MessageData messageData = new MessageData();
-            messageData.setRecipient(sender);
-            messageData.setMessage(message.onlyBody());
-            Response<JsonElement> result = messengerApi.sendMessage(PAGE_ACCESS_TOKEN, messageData).execute();
-            if (result.isSuccessful()) {
-                LOGGER.info("Success: " + result.body().toString());
-                System.out.println("Success: " + result.body().toString());
-            } else {
-                LOGGER.error("Error: " + result.errorBody().string());
-                System.out.println("Error: " + result.errorBody().string());
-            }
+            messageData.setRecipient(user);
+            Message msg = new Message();
+            ButtonsPayload payload = new ButtonsPayload();
+            payload.text = "What can I do for you?";
+            payload.buttons = new ArrayList<>();
+            payload.buttons.add(RedirectButton.create("Take me Headout", "https://www.headout.com"));
+            payload.buttons.add(PostbackButton.create("Talk to me", gson.toJson(ShowCitiesPayload.create())));
+            msg.setAttachment(Attachment.withButtons(payload, gson));
+            messageData.setMessage(msg);
+            sendMessage(messageData);
         } else {
-            LOGGER.info("Not a message with text " + message);
             System.out.println("Not a message with text " + message);
         }
     }
 
-    private static void processPostback(User sender, Postback postback) {
-        LOGGER.info("Postback: " + postback);
+    private static void processPostback(User user, Postback postback) throws Exception {
         System.out.println("Postback: " + postback);
+        CustomPayloadType type = postback.getPayloadType(gson);
+        if (type == CustomPayloadType.SHOW_CITIES) {
+            Response<List<City>> citiesResponse = headoutApi.getCities().execute();
+            if (citiesResponse.isSuccessful()) {
+                List<City> cities = citiesResponse.body();
+                GenericPayload genericPayload = new GenericPayload();
+                List<StructuredElement> elements = new ArrayList<>(cities.size());
+                elements.addAll(cities.stream().map(c -> StructuredElement.fromCity(c, gson)).collect(Collectors.toList()));
+                genericPayload.elements = elements;
+                MessageData messageData = new MessageData();
+                Message msg = new Message();
+                msg.setAttachment(Attachment.withElements(genericPayload, gson));
+                messageData.setRecipient(user);
+                messageData.setMessage(msg);
+                sendMessage(messageData);
+            }
+        } else if (type == CustomPayloadType.SELECT_CITY) {
+            Message msg = new Message();
+            msg.setText("You have chosen well my friend.");
+            MessageData messageData = new MessageData();
+            messageData.setRecipient(user);
+            messageData.setMessage(msg);
+            sendMessage(messageData);
+        }
+    }
+
+    private static void sendMessage(MessageData messageData) throws Exception {
+        Response<JsonElement> result = messengerApi.sendMessage(PAGE_ACCESS_TOKEN, messageData).execute();
+        if (result.isSuccessful()) {
+            System.out.println("Success: " + result.body().toString());
+        } else {
+            System.out.println("Error: " + result.errorBody().string());
+        }
     }
 }

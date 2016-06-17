@@ -13,6 +13,7 @@ public class Message {
     private Integer seq;
     private String text;
     private List<Attachment> attachments;
+    private Attachment attachment;
 
     public void setMid(String mid) {
         this.mid = mid;
@@ -46,10 +47,19 @@ public class Message {
         return attachments;
     }
 
+    public Attachment getAttachment() {
+        return attachment;
+    }
+
+    public void setAttachment(Attachment attachment) {
+        this.attachment = attachment;
+    }
+
     public Message onlyBody() {
         Message m = new Message();
         m.setText(getText());
         m.setAttachments(getAttachments());
+        m.setAttachment(getAttachment());
         return m;
     }
 
