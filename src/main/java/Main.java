@@ -70,8 +70,10 @@ public class Main {
                         })
 
                         .post("webhook", ctx -> {
-//                            ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(Main::processRequest);
-                            ctx.getResponse().status(200).send();
+                            ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(wr -> {
+//                                processRequest(wr);
+                                ctx.render(wr);
+                            });
                         })
 
                         .files(f -> f.dir("public"))
