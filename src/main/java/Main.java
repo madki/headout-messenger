@@ -1,6 +1,9 @@
 import org.jscience.physics.amount.Amount;
 import org.jscience.physics.model.RelativisticModel;
 import ratpack.exec.Blocking;
+import ratpack.handling.Context;
+import ratpack.handling.Handler;
+import ratpack.http.Request;
 import ratpack.server.BaseDir;
 import ratpack.server.RatpackServer;
 import ratpack.groovy.template.TextTemplateModule;
@@ -19,60 +22,33 @@ import javax.measure.quantity.Mass;
 import javax.measure.unit.SI;
 
 public class Main {
-  public static void main(String... args) throws Exception {
-    RatpackServer.start(s -> s
-        .serverConfig(c -> c
-          .baseDir(BaseDir.find())
-          .env())
+    public static final String TOKEN = "my_awesome_token";
+    public static final String PAGE_ACCESS_TOKEN = "EAAIHDdA9sE0BAHbbn6aiLK2kF7O89BUGG3tEXe74cuCgq970jLRfdcxbR83UMTQ3q0JbbzZCyujPTzKaD733wrRWNkyUCwlMe5uMbZC2WGPg8WvQaytEH6ECCpLg5qJIhtsjllBiqzcTQUBWo5um9zvV1GR86eZB7OLoYzWIAZDZD";
 
-        .registry(Guice.registry(b -> b
-          .module(TextTemplateModule.class, conf -> conf.setStaticallyCompile(true))))
+    public static void main(String... args) throws Exception {
+        RatpackServer.start(s -> s
+                .serverConfig(c -> c
+                        .baseDir(BaseDir.find())
+                        .env())
 
-        .handlers(chain -> chain
-            .get(ctx -> ctx.render(groovyTemplate("index.html")))
+                .registry(Guice.registry(b -> b
+                        .module(TextTemplateModule.class, conf -> conf.setStaticallyCompile(true))))
 
-            .get("hello", ctx -> {
-              RelativisticModel.select();
-              Amount<Mass> m = Amount.valueOf("12 GeV").to(SI.KILOGRAM);
-              ctx.render("E=mc^2: 12 GeV = " + m.toString());
-            })
+                .handlers(chain -> chain
+                        .get(ctx -> ctx.render(groovyTemplate("index.html")))
 
-            .get("db", ctx -> {
-              boolean local = !"cedar-14".equals(System.getenv("STACK"));
+                        .get("webhook", ctx -> {
+                            Request request = ctx.getRequest();
+                            Map<String, String> queryParams = request.getQueryParams();
+                            if ("subscribe".equals(queryParams.get("hub.mode")) && TOKEN.equals(queryParams.get("hub.verify_token"))) {
+                                ctx.render(queryParams.get("hub.challenge"));
+                            } else {
+                                ctx.render("Hello world!");
+                            }
+                        })
 
-              Blocking.get(() -> {
-                Connection connection = null;
-
-                try {
-                  connection = DatabaseUrl.extract(local).getConnection();
-                  Statement stmt = connection.createStatement();
-                  stmt.executeUpdate("CREATE TABLE IF NOT EXISTS ticks (tick timestamp)");
-                  stmt.executeUpdate("INSERT INTO ticks VALUES (now())");
-                  return stmt.executeQuery("SELECT tick FROM ticks");
-                } finally {
-                  if (connection != null) try {
-                    connection.close();
-                  } catch (SQLException e) {
-                  }
-                }
-              }).onError(throwable -> {
-                Map<String, Object> attributes = new HashMap<>();
-                attributes.put("message", "There was an error: " + throwable);
-                ctx.render(groovyTemplate(attributes, "error.html"));
-              }).then(rs -> {
-                ArrayList<String> output = new ArrayList<>();
-                while (rs.next()) {
-                  output.add("Read from DB: " + rs.getTimestamp("tick"));
-                }
-
-                Map<String, Object> attributes = new HashMap<>();
-                attributes.put("results", output);
-                ctx.render(groovyTemplate(attributes, "db.html"));
-              });
-            })
-
-            .files(f -> f.dir("public"))
-        )
-    );
-  }
+                        .files(f -> f.dir("public"))
+                )
+        );
+    }
 }
