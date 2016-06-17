@@ -131,7 +131,7 @@ public class Main {
     private static void processMessage(User sender, Message message) throws Exception {
         if (message.getText() != null) {
             MessageData messageData = new MessageData();
-            messageData.setSender(sender);
+            messageData.setRecipient(sender);
             messageData.setMessage(message);
             Response<JsonElement> result = messengerApi.sendMessage(PAGE_ACCESS_TOKEN, messageData).execute();
             if (result.isSuccessful()) {
