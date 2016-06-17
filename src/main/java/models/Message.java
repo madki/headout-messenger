@@ -10,7 +10,7 @@ import java.util.List;
 public class Message {
 
     private String mid;
-    private int seq;
+    private Integer seq;
     private String text;
     private List<Attachment> attachments;
 
@@ -44,6 +44,13 @@ public class Message {
 
     public List<Attachment> getAttachments() {
         return attachments;
+    }
+
+    public Message onlyBody() {
+        Message m = new Message();
+        m.setText(getText());
+        m.setAttachments(getAttachments());
+        return m;
     }
 
     @Override

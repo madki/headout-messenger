@@ -132,7 +132,7 @@ public class Main {
         if (message.getText() != null) {
             MessageData messageData = new MessageData();
             messageData.setRecipient(sender);
-            messageData.setMessage(message);
+            messageData.setMessage(message.onlyBody());
             Response<JsonElement> result = messengerApi.sendMessage(PAGE_ACCESS_TOKEN, messageData).execute();
             if (result.isSuccessful()) {
                 LOGGER.info("Success: " + result.body().toString());
