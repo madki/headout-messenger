@@ -70,7 +70,7 @@ public class Main {
                         })
 
                         .post("webhook", ctx -> {
-                            ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(Main::processRequest);
+//                            ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(Main::processRequest);
                             ctx.getResponse().status(200).send();
                         })
 
