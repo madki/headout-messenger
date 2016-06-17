@@ -77,6 +77,7 @@ public class Main {
                                 .post(() -> {
                                     ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(wr -> {
                                         LOGGER.info("request : " + Strings.toString(wr));
+                                        System.out.println("request : " + Strings.toString(wr));
                                         processRequest(wr);
                                     });
                                     ctx.getResponse().status(200).send();
@@ -109,6 +110,7 @@ public class Main {
             processPostback(messageData.getSender(), messageData.getPostback());
         } else {
             LOGGER.warn("Unknown messageData, neither message, nor postback");
+            System.out.println("Unknown messageData, neither message, nor postback");
         }
     }
 
@@ -120,15 +122,19 @@ public class Main {
             Response<JsonElement> result = messengerApi.sendMessage(PAGE_ACCESS_TOKEN, messageData).execute();
             if (result.isSuccessful()) {
                 LOGGER.info("Success: " + result.body().toString());
+                System.out.println("Success: " + result.body().toString());
             } else {
                 LOGGER.error("Error: " + result.errorBody().string());
+                System.out.println("Error: " + result.errorBody().string());
             }
         } else {
             LOGGER.info("Not a message with text " + message);
+            System.out.println("Not a message with text " + message);
         }
     }
 
     private static void processPostback(User sender, Postback postback) {
         LOGGER.info("Postback: " + postback);
+        System.out.println("Postback: " + postback);
     }
 }
