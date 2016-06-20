@@ -253,7 +253,7 @@ public class Main {
             );
         } else if (type == CustomPayloadType.SELECT_CATEGORY) {
             SelectCategoryPayload selectCategoryPayload = postback.selectCategoryPayload(gson);
-            sendMessage(MessageData.withMessage(user, "Here's Headout top 10 from " + selectCategoryPayload.getCategory().displayName + " collection in " + selectCategoryPayload.getCity().displayName));
+            sendMessage(MessageData.withMessage(user, "Here's Headout top 10 from " + selectCategoryPayload.getCategory().displayName + " collection in " + selectCategoryPayload.getCityName()));
             TourQuery query = TourQuery.builder()
                     .categoryId(selectCategoryPayload.getCategory().id)
                     .tags(selectCategoryPayload.getCategory().tags)
