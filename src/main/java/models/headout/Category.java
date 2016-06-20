@@ -10,6 +10,5 @@ public class Category {
     public String name;
     public String displayName;
     public List<String> tags;
-    public String svg;
     public String imageUrl;
 }
