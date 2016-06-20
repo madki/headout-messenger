@@ -27,11 +27,11 @@ public class Tour {
     @SerializedName("tourUrl")
     public String url;
 
-    @SerializedName("inventoryDates")
-    public List<LocalDate> dates;
+//    @SerializedName("inventoryDates")
+//    public List<LocalDate> dates;
 
-    @SerializedName("inventoryTimes")
-    public List<LocalTime> times;
+//    @SerializedName("inventoryTimes")
+//    public List<LocalTime> times;
 
     @SerializedName("listingPrice")
     public Price price;
