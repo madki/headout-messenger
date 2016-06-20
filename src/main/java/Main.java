@@ -223,7 +223,7 @@ public class Main {
         if (message.getText() != null) {
             ButtonsPayload payload = ButtonsPayload.create(
                     "What can I do for you?",
-                    RedirectButton.create("Take me Headout", "https://www.headout.com"),
+                    RedirectButton.create("Go to website", "https://www.headout.com"),
                     PostbackButton.create("Talk to me", gson.toJson(ShowCitiesPayload.create())
                     ));
             sendMessage(MessageData.withAttachment(user, Attachment.withButtons(payload, gson)));
