@@ -5,6 +5,8 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import models.*;
 import models.headout.*;
+import models.serializers.LocalDateSerializer;
+import models.serializers.LocalTimeSerializer;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -34,6 +36,8 @@ import javax.net.ssl.X509TrustManager;
 import static ratpack.groovy.Groovy.groovyTemplate;
 
 import java.security.cert.CertificateException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -49,7 +53,10 @@ public class Main {
 
     private static final String FIELDS = "first_name,last_name,profile_pic,locale,timezone,gender";
 
-    private static final Gson gson = new GsonBuilder().create();
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapter(LocalDate.class, new LocalDateSerializer())
+            .registerTypeAdapter(LocalTime.class, new LocalTimeSerializer())
+            .create();
 
     private static final HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
 

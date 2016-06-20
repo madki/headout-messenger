@@ -1,9 +1,9 @@
 package models.headout;
 
 import com.google.gson.annotations.SerializedName;
+import org.joda.time.LocalDate;
+import org.joda.time.LocalTime;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 /**
