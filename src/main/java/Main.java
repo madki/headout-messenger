@@ -286,7 +286,7 @@ public class Main {
             TourDetail tourDetail = fetch(headoutApi.getTourDetail(selectTourPayload.getTourId()));
             System.out.println("td: " + tourDetail);
             sendMessage(MessageData.withMessage(user, "Here are some details about " + tourDetail.name + "\n\n" + "Summary: \n" + tourDetail.summary));
-            Thread.sleep(200);
+            Thread.sleep(300);
             sendMessage(MessageData.withMessage(user, "\n\n Highlights: \n" + tourDetail.highlights));
             Thread.sleep(200);
             sendMessage(MessageData.withAttachment(user, Attachment.withButtons(ButtonsPayload.create(
