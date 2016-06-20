@@ -10,7 +10,7 @@ public class SelectCategoryPayload extends CustomPayload {
     private City city;
     private Category category;
 
-    SelectCategoryPayload(City city, Category category) {
+    private SelectCategoryPayload(City city, Category category) {
         super(CustomPayloadType.SELECT_CATEGORY);
         this.city = city;
         this.category = category;

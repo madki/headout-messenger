@@ -251,16 +251,6 @@ public class Main {
                             ),
                             gson))
             );
-            sendMessage(MessageData.withAttachment(
-                    user,
-                    Attachment.withButtons(
-                            ButtonsPayload.create("What would you like to see in " + selectedCity.displayName + "?",
-                            categories.stream().limit(5)
-                                    .map(c -> PostbackButton.create(c.displayName, gson.toJson(SelectCategoryPayload.create(selectedCity, c))))
-                                    .toArray(Button[]::new)),
-                            gson
-                    )
-                    ));
         } else if (type == CustomPayloadType.SELECT_CATEGORY) {
             SelectCategoryPayload selectCategoryPayload = postback.selectCategoryPayload(gson);
             sendMessage(MessageData.withMessage(user, "Here's Headout top 10 from " + selectCategoryPayload.getCategory().displayName + " collection in " + selectCategoryPayload.getCity().displayName));
@@ -274,12 +264,14 @@ public class Main {
             if (!TextUtils.isEmpty(response.pageInfo.nextPageUrl)) {
                 StructuredElement se = new StructuredElement();
                 se.buttons = Arrays.asList(
-                        RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + "/tours/" + Strings.toUrlParam(response.metaData.city.code)),
+//                        RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + "/tours/" + Strings.toUrlParam(response.metaData.city.code)),
                         PostbackButton.create("More", gson.toJson(PaginateToursPayload.create(response.pageInfo.nextPageUrl)))
                 );
                 elements.add(se);
             }
             sendMessage(MessageData.withAttachment(user, Attachment.withElements(GenericPayload.create(elements), gson)));
+        } else {
+            System.out.println("Unrecognized postback");
         }
     }
 

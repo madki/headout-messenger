@@ -39,8 +39,8 @@ public class StructuredElement {
         se.image_url = Urls.auto(tour.imageURL);
         se.subtitle = tour.neighbourhood + " | " + Prices.format(Float.valueOf(tour.price.finalPrice), currency);
         PostbackButton moreButton = PostbackButton.create("Details", gson.toJson(SelectTourPayload.create(tour.id)));
-        RedirectButton webButton = RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + tour.url);
-        se.buttons = Arrays.asList(webButton, moreButton);
+//        RedirectButton webButton = RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + tour.url);
+        se.buttons = Arrays.asList(moreButton);
         return se;
     }
 
@@ -49,7 +49,7 @@ public class StructuredElement {
         se.title = category.displayName;
         se.image_url = Urls.auto(category.imageUrl);
         se.buttons = Arrays.asList(
-                RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + "/tours/" + Strings.toUrlParam(city.cityCode) + "?tags=" + Strings.join(category.tags, ",")),
+//                RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + "/tours/" + Strings.toUrlParam(city.cityCode) + "?tags=" + Strings.join(category.tags, ",")),
                 PostbackButton.create("Select", gson.toJson(SelectCategoryPayload.create(city, category)))
         );
         return se;
