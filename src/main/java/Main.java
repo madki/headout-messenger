@@ -241,6 +241,7 @@ public class Main {
                     Attachment.withElements(
                             GenericPayload.create(
                                     categories.stream()
+                                            .limit(9)
                                             .map(c -> StructuredElement.fromCategory(c, selectedCity, gson))
                                             .collect(Collectors.toList())
                             ),
@@ -255,7 +256,7 @@ public class Main {
                     .build();
             TourListResponse response = fetch(query.fetch(headoutApi));
             List<StructuredElement> elements = new ArrayList<>(response.items.size() + 1);
-            elements.addAll(response.items.stream().map(t -> StructuredElement.fromTour(t, response.metaData.currency(), gson)).collect(Collectors.toList()));
+            elements.addAll(response.items.stream().limit(9).map(t -> StructuredElement.fromTour(t, response.metaData.currency(), gson)).collect(Collectors.toList()));
             if (!TextUtils.isEmpty(response.pageInfo.nextPageUrl)) {
                 StructuredElement se = new StructuredElement();
                 se.buttons = Arrays.asList(
