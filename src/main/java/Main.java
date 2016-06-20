@@ -158,6 +158,9 @@ public class Main {
                                 })
                                 .post(() -> {
                                     System.out.println("Post received");
+                                    ctx.parse(Jackson.jsonNode()).then(
+                                            jn -> System.out.println("Json: " + jn)
+                                    );
                                     ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(wr -> {
                                         LOGGER.info("request : " + Strings.toString(wr));
                                         System.out.println("request : " + Strings.toString(wr));
