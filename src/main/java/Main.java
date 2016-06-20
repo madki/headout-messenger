@@ -10,8 +10,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ratpack.exec.Promise;
 import ratpack.handling.Context;
 import ratpack.http.Request;
+import ratpack.http.TypedData;
 import ratpack.jackson.Jackson;
 import ratpack.server.BaseDir;
 import ratpack.server.RatpackServer;
@@ -158,14 +160,15 @@ public class Main {
                                 })
                                 .post(() -> {
                                     System.out.println("Post received");
-                                    ctx.parse(Jackson.fromJson(WebhookRequest.class))
-                                            .onError(Throwable::printStackTrace)
-                                            .then(
-                                                    wr -> {
-                                                        System.out.println("Request: " + Strings.toString(wr));
-                                                        processRequest(wr);
-                                                    }
-                                            );
+                                    Request request = ctx.getRequest();
+                                    Promise<TypedData> data = request.getBody();
+                                    data.then(
+                                            typedData -> {
+                                                String ds = typedData.getText();
+                                                System.out.println("Body: " + ds);
+                                                processRequest(gson.fromJson(ds, WebhookRequest.class));
+                                            }
+                                    );
                                     ctx.getResponse().status(200).send();
                                 })
                         ))
