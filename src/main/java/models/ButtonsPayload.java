@@ -21,4 +21,20 @@ public class ButtonsPayload {
         bp.buttons = Arrays.asList(buttons);
         return bp;
     }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public List<Button> getButtons() {
+        return buttons;
+    }
+
+    public void setButtons(List<Button> buttons) {
+        this.buttons = buttons;
+    }
 }
