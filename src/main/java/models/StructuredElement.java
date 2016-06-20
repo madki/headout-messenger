@@ -2,10 +2,12 @@ package models;
 
 import apis.HeadoutApi;
 import com.google.gson.Gson;
+import models.headout.Category;
 import models.headout.City;
 import models.headout.Currency;
 import models.headout.Tour;
 import utils.Prices;
+import utils.Strings;
 import utils.Urls;
 
 import java.util.Arrays;
@@ -39,6 +41,17 @@ public class StructuredElement {
         PostbackButton moreButton = PostbackButton.create("Details", gson.toJson(SelectTourPayload.create(tour.id)));
         RedirectButton webButton = RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + tour.url);
         se.buttons = Arrays.asList(webButton, moreButton);
+        return se;
+    }
+
+    public static StructuredElement fromCategory(Category category, City city, Gson gson) {
+        StructuredElement se = new StructuredElement();
+        se.title = category.displayName;
+        se.image_url = category.imageUrl;
+        se.buttons = Arrays.asList(
+                RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + "/tours/" + Strings.toUrlParam(city.cityCode) + "?tags=" + Strings.join(category.tags, ",")),
+                PostbackButton.create("Select", gson.toJson(SelectCategoryPayload.create(city, category)))
+        );
         return se;
     }
 }

@@ -234,15 +234,18 @@ public class Main {
             sendMessage(MessageData.withAttachment(user, Attachment.withElements(citiesPayload(), gson)));
         } else if (type == CustomPayloadType.SELECT_CITY) {
             City selectedCity = postback.selectCityPayload(gson).getCity();
-//            sendMessage(MessageData.withMessage(user, "You chose well my friend!"));
+            sendMessage(MessageData.withMessage(user, "What would you like to see in " + selectedCity.displayName + "?"));
             List<Category> categories = fetch(headoutApi.getCategories(selectedCity.cityCode));
-            ButtonsPayload payload = ButtonsPayload.create(
-                    "What would you like to see in " + selectedCity.displayName + "?",
-                    categories.stream()
-                            .map(c -> PostbackButton.create(c.displayName, gson.toJson(SelectCategoryPayload.create(selectedCity, c))))
-                            .toArray(Button[]::new)
-                    );
-            sendMessage(MessageData.withAttachment(user, Attachment.withButtons(payload, gson)));
+            sendMessage(MessageData.withAttachment(
+                    user,
+                    Attachment.withElements(
+                            GenericPayload.create(
+                                    categories.stream()
+                                            .map(c -> StructuredElement.fromCategory(c, selectedCity, gson))
+                                            .collect(Collectors.toList())
+                            ),
+                            gson))
+            );
         } else if (type == CustomPayloadType.SELECT_CATEGORY) {
             SelectCategoryPayload selectCategoryPayload = postback.selectCategoryPayload(gson);
             sendMessage(MessageData.withMessage(user, "Here's Headout top 10 from " + selectCategoryPayload.getCategory().displayName + " collection in " + selectCategoryPayload.getCity().displayName));
