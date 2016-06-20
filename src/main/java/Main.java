@@ -284,8 +284,8 @@ public class Main {
         } else if (type == CustomPayloadType.SELECT_TOUR) {
             SelectTourPayload selectTourPayload = postback.selectTourPayload(gson);
             TourDetail tourDetail = fetch(headoutApi.getTourDetail(selectTourPayload.getTourId()));
-            sendMessage(MessageData.withMessage(user, "Here are some details about " + tourDetail.name));
-            sendMessage(MessageData.withMessage(user, "Summary: \n " + tourDetail.summary));
+            System.out.println("td: " + tourDetail);
+            sendMessage(MessageData.withMessage(user, "Here are some details about " + tourDetail.name + "\n\n" + "Summary: " + tourDetail.summary));
             sendMessage(MessageData.withAttachment(user, Attachment.withButtons(ButtonsPayload.create(
                     "Highlights: \n " + tourDetail.highlights,
                     RedirectButton.create("Book", HeadoutApi.WEBSITE_BASE_URL + "/tour/" + tourDetail.id)

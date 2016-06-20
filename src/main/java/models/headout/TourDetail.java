@@ -21,4 +21,22 @@ public class TourDetail {
     public String ticketDeliveryInfo;
     @SerializedName("listingPrice") 
     public Price price;
+
+    @Override
+    public String toString() {
+        return "TourDetail{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", neighbourhood='" + neighbourhood + '\'' +
+                ", summary='" + summary + '\'' +
+                ", highlights='" + highlights + '\'' +
+                ", displaySeatsLeftDisabled=" + displaySeatsLeftDisabled +
+                ", additionalInfo='" + additionalInfo + '\'' +
+                ", inclusions='" + inclusions + '\'' +
+                ", displayTags=" + displayTags +
+                ", imageUploads=" + imageUploads +
+                ", ticketDeliveryInfo='" + ticketDeliveryInfo + '\'' +
+                ", price=" + price +
+                '}';
+    }
 }
