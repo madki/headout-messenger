@@ -4,23 +4,25 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import models.*;
-import models.headout.City;
+import models.headout.*;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ratpack.handling.Chain;
+import ratpack.handling.Context;
 import ratpack.http.Request;
 import ratpack.jackson.Jackson;
 import ratpack.server.BaseDir;
 import ratpack.server.RatpackServer;
 import ratpack.groovy.template.TextTemplateModule;
 import ratpack.guice.Guice;
+import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import utils.Strings;
+import utils.TextUtils;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -38,9 +40,12 @@ public class Main {
 
     private static final String TOKEN = "my_awesome_token";
     private static final String PAGE_ACCESS_TOKEN = "EAAQrIZCTlZAS0BABWW4XA5AzAq5fYVxHeZCSK6x0DPljhGoa0z1cZBCBQZAFxfpqISb6JiGbfuTfki5gpRIhHz6FxZB21yz5Uwrtyx566xUUfcHSovR0rygYYUCaa7wPnHW4aJ3CIY2lH8ZB07PrqnGfdJUlU2gP7aRpa5mgmctPQZDZD";
-    private static final String MESSAGE_URL = "https://graph.facebook.com/v2.6/me/";
+    private static final String MESSAGE_URL = "https://graph.facebook.com/v2.6/";
 
     private static final String HEADOUT_URL = "https://www.test-headout.com/";
+    private static final String PAGE_ID = "1032573553458368";
+
+    private static final String FIELDS = "first_name,last_name,profile_pic,locale,timezone,gender";
 
     private static final Gson gson = new GsonBuilder().create();
 
@@ -48,6 +53,8 @@ public class Main {
 
     private static final OkHttpClient messengerClient;
     private static final OkHttpClient headoutClient;
+
+    private static List<City> cities;
 
 
     static {
@@ -57,6 +64,12 @@ public class Main {
         messengerClient = builder.build();
         prepareHeadoutClient(builder);
         headoutClient = builder.build();
+
+        try {
+            fetchCities();
+        } catch (Exception e) {
+            System.out.println("Unable to fetch cities");
+        }
     }
 
     private static void prepareHeadoutClient(OkHttpClient.Builder client) {
@@ -130,6 +143,8 @@ public class Main {
                 .handlers(chain -> chain
                         .get(ctx -> ctx.render(groovyTemplate("index.html")))
 
+                        .get("init", Main::setFirstMessage)
+
                         .path("webhook", ctx -> ctx.byMethod(m -> m
                                 .get(() -> {
                                     Request request = ctx.getRequest();
@@ -153,6 +168,16 @@ public class Main {
                         .files(f -> f.dir("public"))
                 )
         );
+    }
+
+    private static void setFirstMessage(Context ctx) throws Exception {
+        fetchCities();
+        FirstMessage firstMessage = FirstMessage.create(
+                Message.create(Attachment.withElements(citiesPayload(), gson))
+        );
+        System.out.println("First message: " + firstMessage);
+        messengerApi.sendInitialMessage(PAGE_ID, PAGE_ACCESS_TOKEN, firstMessage).execute();
+        ctx.getResponse().status(200).send();
     }
 
     private static void processRequest(WebhookRequest webhookRequest) throws Exception {
@@ -181,47 +206,61 @@ public class Main {
 
     private static void processMessage(User user, Message message) throws Exception {
         if (message.getText() != null) {
-            MessageData messageData = new MessageData();
-            messageData.setRecipient(user);
-            Message msg = new Message();
-            ButtonsPayload payload = new ButtonsPayload();
-            payload.text = "What can I do for you?";
-            payload.buttons = new ArrayList<>();
-            payload.buttons.add(RedirectButton.create("Take me Headout", "https://www.headout.com"));
-            payload.buttons.add(PostbackButton.create("Talk to me", gson.toJson(ShowCitiesPayload.create())));
-            msg.setAttachment(Attachment.withButtons(payload, gson));
-            messageData.setMessage(msg);
-            sendMessage(messageData);
+            ButtonsPayload payload = ButtonsPayload.create(
+                    "What can I do for you?",
+                    RedirectButton.create("Take me Headout", "https://www.headout.com"),
+                    PostbackButton.create("Talk to me", gson.toJson(ShowCitiesPayload.create())
+                    ));
+            sendMessage(MessageData.withAttachment(user, Attachment.withButtons(payload, gson)));
         } else {
             System.out.println("Not a message with text " + message);
         }
+    }
+
+    private static GenericPayload citiesPayload() {
+        return GenericPayload.create(
+                cities.stream()
+                        .map(c -> StructuredElement.fromCity(c, gson))
+                        .toArray(StructuredElement[]::new)
+        );
     }
 
     private static void processPostback(User user, Postback postback) throws Exception {
         System.out.println("Postback: " + postback);
         CustomPayloadType type = postback.getPayloadType(gson);
         if (type == CustomPayloadType.SHOW_CITIES) {
-            Response<List<City>> citiesResponse = headoutApi.getCities().execute();
-            if (citiesResponse.isSuccessful()) {
-                List<City> cities = citiesResponse.body();
-                GenericPayload genericPayload = new GenericPayload();
-                List<StructuredElement> elements = new ArrayList<>(cities.size());
-                elements.addAll(cities.stream().map(c -> StructuredElement.fromCity(c, gson)).collect(Collectors.toList()));
-                genericPayload.elements = elements;
-                MessageData messageData = new MessageData();
-                Message msg = new Message();
-                msg.setAttachment(Attachment.withElements(genericPayload, gson));
-                messageData.setRecipient(user);
-                messageData.setMessage(msg);
-                sendMessage(messageData);
-            }
+            fetchCities();
+            sendMessage(MessageData.withAttachment(user, Attachment.withElements(citiesPayload(), gson)));
         } else if (type == CustomPayloadType.SELECT_CITY) {
-            Message msg = new Message();
-            msg.setText("You have chosen well my friend.");
-            MessageData messageData = new MessageData();
-            messageData.setRecipient(user);
-            messageData.setMessage(msg);
-            sendMessage(messageData);
+            City selectedCity = postback.selectCityPayload(gson).getCity();
+            sendMessage(MessageData.withMessage(user, "You chose well my friend!"));
+            List<Category> categories = fetch(headoutApi.getCategories(selectedCity.cityCode));
+            ButtonsPayload payload = ButtonsPayload.create(
+                    "What would you like to see in " + selectedCity.displayName + "?",
+                    categories.stream()
+                            .map(c -> PostbackButton.create(c.displayName, gson.toJson(SelectCategoryPayload.create(selectedCity, c))))
+                            .toArray(Button[]::new)
+                    );
+            sendMessage(MessageData.withAttachment(user, Attachment.withButtons(payload, gson)));
+        } else if (type == CustomPayloadType.SELECT_CATEGORY) {
+            SelectCategoryPayload selectCategoryPayload = postback.selectCategoryPayload(gson);
+            sendMessage(MessageData.withMessage(user, "Here's Headout top 10 from " + selectCategoryPayload.getCategory().displayName + " collection in " + selectCategoryPayload.getCity().displayName));
+            TourQuery query = TourQuery.builder()
+                    .categoryId(selectCategoryPayload.getCategory().id)
+                    .tags(selectCategoryPayload.getCategory().tags)
+                    .build();
+            TourListResponse response = fetch(query.fetch(headoutApi));
+            List<StructuredElement> elements = new ArrayList<>(response.items.size() + 1);
+            elements.addAll(response.items.stream().map(t -> StructuredElement.fromTour(t, response.metaData.currency(), gson)).collect(Collectors.toList()));
+            if (!TextUtils.isEmpty(response.pageInfo.nextPageUrl)) {
+                StructuredElement se = new StructuredElement();
+                se.buttons = Arrays.asList(
+                        RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + "/tours/" + Strings.toUrlParam(response.metaData.city.code)),
+                        PostbackButton.create("More", gson.toJson(PaginateToursPayload.create(response.pageInfo.nextPageUrl)))
+                );
+                elements.add(se);
+            }
+            sendMessage(MessageData.withAttachment(user, Attachment.withElements(GenericPayload.create(elements), gson)));
         }
     }
 
@@ -233,4 +272,22 @@ public class Main {
             System.out.println("Error: " + result.errorBody().string());
         }
     }
+
+    private static <T> T fetch(Call<T> call) throws Exception {
+        Response<T> response = call.execute();
+        if (response.isSuccessful()) {
+            return response.body();
+        } else {
+            throw new Exception("Unable to fetch results");
+        }
+    }
+
+    private static void fetchCities() throws Exception {
+        if (cities == null) {
+            cities = fetch(headoutApi.getCities());
+        }
+    }
+
 }
+
+

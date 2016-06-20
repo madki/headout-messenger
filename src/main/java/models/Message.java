@@ -63,6 +63,18 @@ public class Message {
         return m;
     }
 
+    public static Message create(String text) {
+        Message m = new Message();
+        m.setText(text);
+        return m;
+    }
+
+    public static Message create(Attachment attachment) {
+        Message m = new Message();
+        m.setAttachment(attachment);
+        return m;
+    }
+
     @Override
     public String toString() {
         return "Message{" +

@@ -25,6 +25,14 @@ public class Postback {
         return pl.getType();
     }
 
+    public SelectCityPayload selectCityPayload(Gson gson) {
+        return gson.fromJson(payload, SelectCityPayload.class);
+    }
+
+    public SelectCategoryPayload selectCategoryPayload(Gson gson) {
+        return gson.fromJson(payload, SelectCategoryPayload.class);
+    }
+
     @Override
     public String toString() {
         return "Postback{" +

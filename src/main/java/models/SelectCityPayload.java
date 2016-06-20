@@ -1,21 +1,23 @@
 package models;
 
+import models.headout.City;
+
 /**
  * Created by madki on 17/06/16.
  */
 public class SelectCityPayload extends CustomPayload {
-    private final String cityCode;
+    private final City city;
 
-    private SelectCityPayload(String cityCode) {
+    private SelectCityPayload(City city) {
         super(CustomPayloadType.SELECT_CITY);
-        this.cityCode = cityCode;
+        this.city = city;
     }
 
-    public String getCityCode() {
-        return cityCode;
+    public City getCity() {
+        return city;
     }
 
-    public static SelectCityPayload create(String cityCode) {
-        return new SelectCityPayload(cityCode);
+    public static SelectCityPayload create(City city) {
+        return new SelectCityPayload(city);
     }
 }

@@ -13,6 +13,20 @@ public class MessageData {
     private Message message;
     private Postback postback;
 
+    public static MessageData withAttachment(User recipient, Attachment attachment) {
+        MessageData md = new MessageData();
+        md.setRecipient(recipient);
+        md.setMessage(Message.create(attachment));
+        return md;
+    }
+
+    public static MessageData withMessage(User recipient, String text) {
+        MessageData md = new MessageData();
+        md.setRecipient(recipient);
+        md.setMessage(Message.create(text));
+        return md;
+    }
+
     public void setSender(User sender) {
         this.sender = sender;
     }

@@ -2,6 +2,7 @@ package models;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -11,4 +12,16 @@ public class GenericPayload {
     @SerializedName("template_type")
     private final TemplateType templateType = TemplateType.generic;
     public List<StructuredElement> elements;
+
+    public static GenericPayload create(StructuredElement... elements) {
+        GenericPayload gp = new GenericPayload();
+        gp.elements = Arrays.asList(elements);
+        return gp;
+    }
+
+    public static GenericPayload create(List<StructuredElement> elements) {
+        GenericPayload gp = new GenericPayload();
+        gp.elements = elements;
+        return gp;
+    }
 }
