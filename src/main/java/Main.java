@@ -251,6 +251,16 @@ public class Main {
                             ),
                             gson))
             );
+            sendMessage(MessageData.withAttachment(
+                    user,
+                    Attachment.withButtons(
+                            ButtonsPayload.create("What would you like to see in " + selectedCity.displayName + "?",
+                            categories.stream().limit(5)
+                                    .map(c -> PostbackButton.create(c.displayName, gson.toJson(SelectCategoryPayload.create(selectedCity, c))))
+                                    .toArray(Button[]::new)),
+                            gson
+                    )
+                    ));
         } else if (type == CustomPayloadType.SELECT_CATEGORY) {
             SelectCategoryPayload selectCategoryPayload = postback.selectCategoryPayload(gson);
             sendMessage(MessageData.withMessage(user, "Here's Headout top 10 from " + selectCategoryPayload.getCategory().displayName + " collection in " + selectCategoryPayload.getCity().displayName));
