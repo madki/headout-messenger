@@ -272,14 +272,14 @@ public class Main {
             TourListResponse response = fetch(query.fetch(headoutApi));
             List<StructuredElement> elements = new ArrayList<>(response.items.size() + 1);
             elements.addAll(response.items.stream().limit(9).map(t -> StructuredElement.fromTour(t, response.metaData.currency(), gson)).collect(Collectors.toList()));
-            if (!TextUtils.isEmpty(response.pageInfo.nextPageUrl)) {
-                StructuredElement se = new StructuredElement();
-                se.buttons = Arrays.asList(
-//                        RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + "/tours/" + Strings.toUrlParam(response.metaData.city.code)),
-                        PostbackButton.create("More", gson.toJson(PaginateToursPayload.create(response.pageInfo.nextPageUrl)))
-                );
-                elements.add(se);
-            }
+//            if (!TextUtils.isEmpty(response.pageInfo.nextPageUrl)) {
+//                StructuredElement se = new StructuredElement();
+//                se.buttons = Arrays.asList(
+////                        RedirectButton.create("Website", HeadoutApi.WEBSITE_BASE_UTL + "/tours/" + Strings.toUrlParam(response.metaData.city.code)),
+//                        PostbackButton.create("More", gson.toJson(PaginateToursPayload.create(response.pageInfo.nextPageUrl)))
+//                );
+//                elements.add(se);
+//            }
             sendMessage(MessageData.withAttachment(user, Attachment.withElements(GenericPayload.create(elements), gson)));
         } else {
             System.out.println("Unrecognized postback");
