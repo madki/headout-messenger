@@ -1,9 +1,6 @@
 package apis;
 
-import models.headout.Category;
-import models.headout.City;
-import models.headout.TourListResponse;
-import models.headout.TourQuery;
+import models.headout.*;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
@@ -17,7 +14,7 @@ import java.util.List;
  * Created by madki on 17/06/16.
  */
 public interface HeadoutApi {
-    public static final String WEBSITE_BASE_UTL = "https://www.headout.com";
+    public static final String WEBSITE_BASE_URL = "https://www.headout.com";
 
     @GET("api/v2/city/list")
     Call<List<City>> getCities();
@@ -40,4 +37,7 @@ public interface HeadoutApi {
 
     @GET
     Call<TourListResponse> getToursPage(@Url String pageUrl);
+
+    @GET("api/v2/tour-group/get/id/{id}?fetch-tours=true&fetch-inventory-and-pricing=true")
+    Call<TourDetail> getTourDetail(@Path("id") long id);
 }

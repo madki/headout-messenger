@@ -33,6 +33,10 @@ public class Postback {
         return gson.fromJson(payload, SelectCategoryPayload.class);
     }
 
+    public SelectTourPayload selectTourPayload(Gson gson) {
+        return gson.fromJson(payload, SelectTourPayload.class);
+    }
+
     @Override
     public String toString() {
         return "Postback{" +
