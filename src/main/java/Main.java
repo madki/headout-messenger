@@ -158,12 +158,14 @@ public class Main {
                                 })
                                 .post(() -> {
                                     System.out.println("Post received");
-                                    ctx.parse(Jackson.fromJson(WebhookRequest.class)).then(
-                                            wr -> {
-                                                System.out.println("Request: " + Strings.toString(wr));
-                                                processRequest(wr);
-                                            }
-                                    );
+                                    ctx.parse(Jackson.fromJson(WebhookRequest.class))
+                                            .onError(Throwable::printStackTrace)
+                                            .then(
+                                                    wr -> {
+                                                        System.out.println("Request: " + Strings.toString(wr));
+                                                        processRequest(wr);
+                                                    }
+                                            );
                                     ctx.getResponse().status(200).send();
                                 })
                         ))
