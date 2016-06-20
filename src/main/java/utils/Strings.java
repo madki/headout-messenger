@@ -1,5 +1,6 @@
 package utils;
 
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +58,7 @@ public final class Strings {
 
     public static String toUrlParam(String constantCase) {
         if (TextUtils.isEmpty(constantCase)) return constantCase;
-        return toProperCase(constantCase).replaceAll("_", "-");
+        return constantCase.replaceAll("_", "-").toUpperCase(Locale.getDefault());
     }
 
     public static String join(Iterable<String> strings, String joiner) {
