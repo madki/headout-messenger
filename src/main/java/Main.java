@@ -258,6 +258,7 @@ public class Main {
             SelectCategoryPayload selectCategoryPayload = postback.selectCategoryPayload(gson);
             sendMessage(MessageData.withMessage(user, "Here's Headout top 10 from " + selectCategoryPayload.getCategory().displayName + " collection in " + selectCategoryPayload.getCityName()));
             TourQuery query = TourQuery.builder()
+                    .cityCode(selectCategoryPayload.getCityCode())
                     .categoryId(selectCategoryPayload.getCategory().id)
                     .tags(selectCategoryPayload.getCategory().tags)
                     .build();
