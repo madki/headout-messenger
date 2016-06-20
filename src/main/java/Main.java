@@ -233,7 +233,7 @@ public class Main {
             sendMessage(MessageData.withAttachment(user, Attachment.withElements(citiesPayload(), gson)));
         } else if (type == CustomPayloadType.SELECT_CITY) {
             City selectedCity = postback.selectCityPayload(gson).getCity();
-            sendMessage(MessageData.withMessage(user, "You chose well my friend!"));
+//            sendMessage(MessageData.withMessage(user, "You chose well my friend!"));
             List<Category> categories = fetch(headoutApi.getCategories(selectedCity.cityCode));
             ButtonsPayload payload = ButtonsPayload.create(
                     "What would you like to see in " + selectedCity.displayName + "?",
